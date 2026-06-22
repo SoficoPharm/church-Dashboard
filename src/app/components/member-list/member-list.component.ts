@@ -21,6 +21,7 @@ export class MemberListComponent implements OnInit {
   searchTerm: string = '';
 
   isLoggedIn = false;
+  isAdmin = false; // ✅ متغير جديد لتتبع صلاحية المدير
   loginModel = { membershipNumber: '', password: '' };
   loginError = '';
 
@@ -44,6 +45,13 @@ export class MemberListComponent implements OnInit {
   checkLogin(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
     if (this.isLoggedIn) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      this.isAdmin = user.isAdmin || false;
+      console.log('👤 Logged in user:', user);
+      console.log('🔑 Is Admin:', this.isAdmin);
+      if (!this.isAdmin) {
+        alert('⚠️ You are not an admin! Only admins can add/edit/delete members.');
+      }
       this.loadMembers();
     }
   }
@@ -73,6 +81,11 @@ export class MemberListComponent implements OnInit {
       next: () => {
         this.isLoggedIn = true;
         this.loginError = '';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        this.isAdmin = user.isAdmin || false;
+        if (!this.isAdmin) {
+          alert('⚠️ You are not an admin! Only admins can manage members.');
+        }
         this.loadMembers();
       },
       error: () => this.loginError = 'Invalid credentials'
@@ -82,12 +95,17 @@ export class MemberListComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.isLoggedIn = false;
+    this.isAdmin = false;
     this.members = [];
     this.filteredMembers = [];
     this.searchTerm = '';
   }
 
   openAddForm(): void {
+    if (!this.isAdmin) {
+      alert('⚠️ Only admins can add members.');
+      return;
+    }
     this.isEditMode = false;
     this.editId = 0;
     this.formModel = { membershipNumber: '', fullName: '', email: '', phone: '', password: '', newPassword: '' };
@@ -96,6 +114,10 @@ export class MemberListComponent implements OnInit {
   }
 
   openEditForm(member: Member): void {
+    if (!this.isAdmin) {
+      alert('⚠️ Only admins can edit members.');
+      return;
+    }
     this.isEditMode = true;
     this.editId = member.id;
     this.formModel = {
@@ -111,6 +133,11 @@ export class MemberListComponent implements OnInit {
   }
 
   saveMember(): void {
+    if (!this.isAdmin) {
+      this.formError = '⚠️ Only admins can perform this action.';
+      return;
+    }
+
     if (this.isEditMode) {
       const updateData: MemberUpdateDto = {
         fullName: this.formModel.fullName,
@@ -123,7 +150,10 @@ export class MemberListComponent implements OnInit {
           this.loadMembers();
           this.showForm = false;
         },
-        error: () => this.formError = 'Update failed'
+        error: (err) => {
+          console.error('❌ Update failed:', err);
+          this.formError = this.extractErrorMessage(err);
+        }
       });
     } else {
       const createData: MemberCreateDto = {
@@ -133,19 +163,53 @@ export class MemberListComponent implements OnInit {
         phone: this.formModel.phone,
         password: this.formModel.password
       };
+      console.log('📤 Sending create data:', createData);
       this.memberService.create(createData).subscribe({
         next: () => {
           this.loadMembers();
           this.showForm = false;
         },
-        error: () => this.formError = 'Add failed'
+        error: (err) => {
+          console.error('❌ Add failed:', err);
+          this.formError = this.extractErrorMessage(err);
+        }
       });
     }
   }
 
+  private extractErrorMessage(err: any): string {
+    if (err.error) {
+      if (typeof err.error === 'string') {
+        return err.error;
+      }
+      if (err.error.message) {
+        return err.error.message;
+      }
+      if (err.error.errors) {
+        const errors = err.error.errors;
+        const messages = Object.values(errors).flat();
+        return messages.join('; ');
+      }
+    }
+    if (err.message) {
+      return err.message;
+    }
+    return 'Unknown error occurred';
+  }
+
   deleteMember(id: number): void {
+    if (!this.isAdmin) {
+      alert('⚠️ Only admins can delete members.');
+      return;
+    }
     if (confirm('Are you sure you want to delete this member?')) {
-      this.memberService.delete(id).subscribe(() => this.loadMembers());
+      this.memberService.delete(id).subscribe({
+        next: () => this.loadMembers(),
+        error: (err) => {
+          console.error('❌ Delete failed:', err);
+          alert('Delete failed: ' + this.extractErrorMessage(err));
+        }
+      });
     }
   }
 }

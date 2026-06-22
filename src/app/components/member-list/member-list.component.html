@@ -16,7 +16,7 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <!-- Login Page (shown when not logged in) -->
+    <!-- Login Page -->
     <div *ngIf="!isLoggedIn" class="login-box">
       <h2>Login</h2>
       <form (ngSubmit)="login()" #loginForm="ngForm">
@@ -33,7 +33,7 @@
       </form>
     </div>
 
-    <!-- Members List (shown when logged in) -->
+    <!-- Members List -->
     <div *ngIf="isLoggedIn">
       <div class="header">
         <h2>Members List</h2>
@@ -42,7 +42,7 @@
             <input type="text" placeholder="Search by name or membership..." [(ngModel)]="searchTerm" (input)="filterMembers()">
             <span class="search-icon">🔍</span>
           </div>
-          <button class="btn-add" (click)="openAddForm()">➕ Add Member</button>
+          <button *ngIf="isAdmin" class="btn-add" (click)="openAddForm()">➕ Add Member</button>
           <button class="btn-logout" (click)="logout()">🚪 Logout</button>
         </div>
       </div>
@@ -66,8 +66,8 @@
             <td>{{ member.email }}</td>
             <td>{{ member.phone || '-' }}</td>
             <td>
-              <button class="btn-edit" (click)="openEditForm(member)">✏️ Edit</button>
-              <button class="btn-delete" (click)="deleteMember(member.id)">🗑️ Delete</button>
+              <button *ngIf="isAdmin" class="btn-edit" (click)="openEditForm(member)">✏️ Edit</button>
+              <button *ngIf="isAdmin" class="btn-delete" (click)="deleteMember(member.id)">🗑️ Delete</button>
             </td>
           </tr>
           <tr *ngIf="filteredMembers.length === 0">
@@ -84,32 +84,84 @@
     <div *ngIf="showForm" class="modal-overlay">
       <div class="modal">
         <h3>{{ isEditMode ? 'Edit Member' : 'Add New Member' }}</h3>
-        <form (ngSubmit)="saveMember()" #form="ngForm">
+        <form (ngSubmit)="saveMember()" #form="ngForm" novalidate>
+          
+          <!-- Membership Number -->
           <div *ngIf="!isEditMode">
             <label>Membership Number</label>
-            <input type="text" [(ngModel)]="formModel.membershipNumber" name="membershipNumber" required>
+            <input type="text" 
+                   [(ngModel)]="formModel.membershipNumber" 
+                   name="membershipNumber" 
+                   #membershipNumber="ngModel"
+                   required>
+            <div *ngIf="membershipNumber.invalid && membershipNumber.touched" class="field-error">
+              <span *ngIf="membershipNumber.errors?.['required']">⚠️ Membership Number is required.</span>
+            </div>
           </div>
+
+          <!-- Full Name -->
           <div>
             <label>Full Name</label>
-            <input type="text" [(ngModel)]="formModel.fullName" name="fullName" required>
+            <input type="text" 
+                   [(ngModel)]="formModel.fullName" 
+                   name="fullName" 
+                   #fullName="ngModel"
+                   required>
+            <div *ngIf="fullName.invalid && fullName.touched" class="field-error">
+              <span *ngIf="fullName.errors?.['required']">⚠️ Full Name is required.</span>
+            </div>
           </div>
-          <div>
-            <label>Email</label>
-            <input type="email" [(ngModel)]="formModel.email" name="email" required>
-          </div>
+
+        <!-- Email -->
+<div>
+  <label>Email</label>
+  <input type="email" 
+         [(ngModel)]="formModel.email" 
+         name="email" 
+         #email="ngModel"
+         required>
+  <div *ngIf="email.invalid && email.touched" class="field-error">
+    <span *ngIf="email.errors?.['required']">⚠️ Email is required.</span>
+    <span *ngIf="email.errors?.['email']">⚠️ Please enter a valid email address (e.g., user&#64;domain.com).</span>
+  </div>
+</div>
+
+          <!-- Phone -->
           <div>
             <label>Phone</label>
             <input type="text" [(ngModel)]="formModel.phone" name="phone">
           </div>
+
+          <!-- Password (Add Mode) -->
           <div *ngIf="!isEditMode">
             <label>Password</label>
-            <input type="password" [(ngModel)]="formModel.password" name="password" required minlength="6">
+            <input type="password" 
+                   [(ngModel)]="formModel.password" 
+                   name="password" 
+                   #password="ngModel"
+                   required minlength="6">
+            <div *ngIf="password.invalid && password.touched" class="field-error">
+              <span *ngIf="password.errors?.['required']">⚠️ Password is required.</span>
+              <span *ngIf="password.errors?.['minlength']">⚠️ Password must be at least 6 characters.</span>
+            </div>
           </div>
+
+          <!-- New Password (Edit Mode) -->
           <div *ngIf="isEditMode">
             <label>New Password (optional)</label>
-            <input type="password" [(ngModel)]="formModel.newPassword" name="newPassword" minlength="6">
+            <input type="password" 
+                   [(ngModel)]="formModel.newPassword" 
+                   name="newPassword" 
+                   #newPassword="ngModel"
+                   minlength="6">
+            <div *ngIf="newPassword.invalid && newPassword.touched" class="field-error">
+              <span *ngIf="newPassword.errors?.['minlength']">⚠️ New Password must be at least 6 characters.</span>
+            </div>
           </div>
+
+          <!-- Form Error (from API) -->
           <p *ngIf="formError" class="error">{{ formError }}</p>
+          
           <div class="modal-actions">
             <button type="submit" [disabled]="form.invalid">{{ isEditMode ? 'Update' : 'Add' }}</button>
             <button type="button" class="btn-cancel" (click)="showForm = false">Cancel</button>

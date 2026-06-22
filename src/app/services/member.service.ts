@@ -18,14 +18,17 @@ export class MemberService {
   }
 
   create(data: MemberCreateDto): Observable<Member> {
+    console.log('📤 Creating member with data:', data);
     return this.http.post<Member>(`${this.apiUrl}/Members`, data);
   }
 
   update(id: number, data: MemberUpdateDto): Observable<void> {
+    console.log('📤 Updating member with data:', data);
     return this.http.put<void>(`${this.apiUrl}/Members/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
+    console.log('🗑️ Deleting member with id:', id);
     return this.http.delete<void>(`${this.apiUrl}/Members/${id}`);
   }
 }

@@ -14,6 +14,7 @@ export class AuthService {
       tap(res => {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res));
+        console.log('🔑 Login successful, user data:', res);
       })
     );
   }
