@@ -1,0 +1,101 @@
+<div class="app-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>⛪ ChurchApp</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <ul>
+        <li><a (click)="goBack()" style="cursor:pointer">📋 Members</a></li>
+        <li><a href="#">📊 Dashboard</a></li>
+        <li><a href="#">⚙️ Settings</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <button class="btn-back" (click)="goBack()">← Back to Members</button>
+
+    <div *ngIf="loading" class="loading">⏳ Loading...</div>
+
+    <div *ngIf="!loading && selectedMember">
+
+      <!-- Family Information -->
+      <div class="card">
+        <h3>👨‍👩‍👧‍👦 Family Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Family Code</span>
+            <span class="value">{{ selectedMember.familyCode || '-' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Address</span>
+            <span class="value">{{ selectedMember.address || '-' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Area</span>
+            <span class="value">{{ selectedMember.area || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Family Members -->
+      <div class="card">
+        <h3>👥 Family Members
+          <span class="badge">{{ familyMembers.length }}</span>
+        </h3>
+        <div class="members-grid">
+          <div
+            *ngFor="let member of familyMembers"
+            class="member-card"
+            [class.highlighted]="isSelected(member)"
+            (click)="selectMember(member)">
+
+            <div class="member-header">
+              <span class="member-name">{{ member.fullName }}</span>
+              <span class="member-relation">{{ member.relationship || 'Member' }}</span>
+            </div>
+
+            <div class="member-details">
+              <div class="detail-row">
+                <span class="d-label">Membership #</span>
+                <span>{{ member.membershipNumber }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Date of Birth</span>
+                <span>{{ member.dateOfBirth ? (member.dateOfBirth | date:'mediumDate') : '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Job / Year</span>
+                <span>{{ member.jobOrAcademicYear || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Confession Father</span>
+                <span>{{ member.confessionFather || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Phone 1</span>
+                <span>{{ member.phone1 || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Phone 2</span>
+                <span>{{ member.phone2 || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Email</span>
+                <span>{{ member.email || '-' }}</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div *ngIf="!loading && !selectedMember" class="empty-state">
+      ❌ Member not found. <button class="btn-back" (click)="goBack()">Go Back</button>
+    </div>
+
+  </main>
+</div>

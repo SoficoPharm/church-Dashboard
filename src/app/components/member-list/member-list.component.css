@@ -370,3 +370,15 @@ tr:hover {
 .modal-actions .btn-cancel:hover {
   background: #e2e8f0;
 }
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.clickable-row:hover {
+  background: #eff6ff !important;
+}
+.field-error {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}
